@@ -29,6 +29,7 @@ class TrainingConfig:
     stratify: str
     test_size: float
     random_state : int
+    eval_results_folder: Path
 
 
 
@@ -38,4 +39,24 @@ class EvaluationConfig:
     local_data_file: Path
     mlflow_uri: str
     all_params: dict
+    eval_results_folder: Path
+    mlflow_results_folder: Path
     
+    
+@dataclass(frozen=True)
+class MLFlowConfig:
+    model_save_filepath: Path
+    experiment_name: str
+    local_tracking_uri: str
+    remote_tracking_uri: str
+    all_params: dict
+    eval_results_folder: Path
+    mlflow_results_folder: Path
+
+
+@dataclass(frozen=True)
+class HyperparameterOptimizationConfig:
+    max_evals: int
+    params_space: dict
+    random_state: int
+    use_hyperopt: bool

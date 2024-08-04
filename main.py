@@ -3,7 +3,10 @@ from src.XGBClassifier.pipeline.stage_01_data_ingestion import DataIngestionTrai
 from src.XGBClassifier.pipeline.stage_02_prepare_base_model import PrepareBaseModelTrainingPipeline
 from src.XGBClassifier.pipeline.stage_03_training_cross_val import ModelTrainingPipeline
 from src.XGBClassifier.pipeline.stage_04_evaluation import EvaluationPipeline
+from src.XGBClassifier.pipeline.stage_05_mlflow import MLFlowTrackingPipeline
+import subprocess
 
+model_development = True
 
 STAGE_NAME = "Data Ingestion stage"
 try:
@@ -43,21 +46,46 @@ except Exception as e:
 
 
 
-
-STAGE_NAME = "Evaluation stage"
-try:
-   logger.info(f"*******************")
-   logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
-   model_evalution = EvaluationPipeline()
-   model_evalution.main(xgb)
-   logger.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
-
-except Exception as e:
-        logger.exception(e)
-        raise e
-
+if model_development == True:
+   STAGE_NAME = "Evaluation stage"
+   try:
+      logger.info(f"*******************")
+      logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
+      model_evalution = EvaluationPipeline()
+      model_evalution.main()
+      logger.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
+   except Exception as e:
+      logger.exception(e)
+      raise e
 
 
+
+   STAGE_NAME = "MLFlow stage"
+   try:
+      logger.info(f"*******************")
+      logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
+      model_tracking = MLFlowTrackingPipeline()
+      model_tracking.main()
+      logger.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
+   except Exception as e:
+      logger.exception(e)
+      raise e
+
+else : 
+   # Upload files to S3
+   try:
+      logger.info(f"********************")
+      logger.info(f">>>>>> stage Upload to S3 started <<<<<<")
+      result = subprocess.run(['python', 'upload_to_s3.py'], capture_output=True, text=True)
+      if result.returncode != 0:
+         logger.error(f"Failed to upload files to S3: {result.stderr}")
+         raise Exception(f"Failed to upload files to S3: {result.stderr}")
+      else:
+         logger.info(f"Successfully uploaded files to S3: {result.stdout}")
+      logger.info(f">>>>>> stage Upload to S3 completed <<<<<<\n\nx==========x")
+   except Exception as e:
+      logger.exception(e)
+      raise e
 
 
 
